@@ -6,8 +6,8 @@ import matplotlib.pyplot as plt
 # path = r'C:\Users\grzeg\Documents\Studia\Semestr 6\Widzenie Maszynowe\Projekt\BikeMeasure\data\2.png'
 # path = r'C:\Users\grzeg\Documents\Studia\Semestr 6\Widzenie Maszynowe\Projekt\BikeMeasure\data\3.jpg'
 # path = r'C:\Users\grzeg\Documents\Studia\Semestr 6\Widzenie Maszynowe\Projekt\BikeMeasure\data\olx1.png'
-# path = r'C:\Users\grzeg\Documents\Studia\Semestr 6\Widzenie Maszynowe\Projekt\BikeMeasure\data\olx2.png'
-path = r'C:\Users\grzeg\Documents\Studia\Semestr 6\Widzenie Maszynowe\Projekt\BikeMeasure\data\image.webp'
+path = r'C:\Users\grzeg\Documents\Studia\Semestr 6\Widzenie Maszynowe\Projekt\BikeMeasure\data\olx2.png'
+# path = r'C:\Users\grzeg\Documents\Studia\Semestr 6\Widzenie Maszynowe\Projekt\BikeMeasure\data\image.webp'
 img = cv2.imread(path)
 img = cv2.resize(img, (1000, 700))
 
@@ -44,6 +44,9 @@ theta = np.pi / 180  # Angle resolution of the accumulator in radians.
 threshold = 15  # Accumulator threshold parameter. Only those lines are returned that get enough votes ( >threshold ).
 minLineLength = ref - 30  # od wielkosci zdjecia
 maxLineGap = ref/7  # Maximum allowed gap between points on the same line to link them.
+
+print(minLineLength)
+print(maxLineGap)
 
 imgLines = np.copy(img) * 0
 

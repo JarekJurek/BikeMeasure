@@ -52,8 +52,13 @@ for maks in maksy:
                        ((x[maksy[index]] + (0.6 * x[maksy[index]])), 255, 255))
     cv2.imshow('Obraz', img2)
 
+    # imgErode = cv2.erode(img2, np.ones((3, 3), np.uint8), iterations=3)
+    # imgDilate = cv2.dilate(imgErode, np.ones((3, 3), np.uint8), iterations=1)
+
     kernel = 11
     imgGauss = cv2.GaussianBlur(img2, (kernel, kernel), 0)
+    cv2.imshow('Obraz', imgGauss)
+
     imgCanny = cv2.Canny(imgGauss, 50, 150)
     rho = 1  # Distance resolution of the accumulator in pixels.
     theta = np.pi / 180  # Angle resolution of the accumulator in radians.
