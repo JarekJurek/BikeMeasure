@@ -6,8 +6,8 @@ import matplotlib.pyplot as plt
 # path = r'C:\Users\grzeg\Documents\Studia\Semestr 6\Widzenie Maszynowe\Projekt\BikeMeasure\data\2.png'
 # path = r'C:\Users\grzeg\Documents\Studia\Semestr 6\Widzenie Maszynowe\Projekt\BikeMeasure\data\3.jpg'
 # path = r'C:\Users\grzeg\Documents\Studia\Semestr 6\Widzenie Maszynowe\Projekt\BikeMeasure\data\olx1.png'
-path = r'C:\Users\grzeg\Documents\Studia\Semestr 6\Widzenie Maszynowe\Projekt\BikeMeasure\data\olx2.png'
-
+# path = r'C:\Users\grzeg\Documents\Studia\Semestr 6\Widzenie Maszynowe\Projekt\BikeMeasure\data\olx2.png'
+path = r'C:\Users\grzeg\Documents\Studia\Semestr 6\Widzenie Maszynowe\Projekt\BikeMeasure\data\image.webp'
 img = cv2.imread(path)
 img = cv2.resize(img, (1000, 700))
 
@@ -18,6 +18,11 @@ kernel = 11
 imgGauss = cv2.GaussianBlur(imgGray, (kernel, kernel), 0)
 
 imgCanny = cv2.Canny(imgGauss, 150, 150)
+
+###############################################################################
+# przestrzeń r, fi -> Hough Lines, po 13 jutro
+
+
 
 # imgDilate = cv2.dilate(imgCanny, np.ones((3, 3), np.uint8), iterations=1)
 
