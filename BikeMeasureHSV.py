@@ -7,8 +7,9 @@ from scipy.signal import argrelextrema
 # path = r'C:\Users\grzeg\Documents\Studia\Semestr 6\Widzenie Maszynowe\Projekt\BikeMeasure\data\olx1.png'
 path = r'C:\Users\grzeg\Documents\Studia\Semestr 6\Widzenie Maszynowe\Projekt\BikeMeasure\data\olx2.png'
 # path = r'C:\Users\grzeg\Documents\Studia\Semestr 6\Widzenie Maszynowe\Projekt\BikeMeasure\data\olx3.jpg'
-# path = r'C:\Users\grzeg\Documents\Studia\Semestr 6\Widzenie Maszynowe\Projekt\BikeMeasure\data\3.jpg'
+# path = r'C:\Users\grzeg\Documents\Studia\Semestr 6\Widzenie Maszynowe\Projekt\BikeMeasure\data\olx4.jpg'
 
+print("witam")
 img = cv2.imread(path)
 img = cv2.resize(img, (1000, 700))
 
@@ -37,11 +38,6 @@ maximums = argrelextrema(y, np.greater)
 for maximum in maximums:
     maksy = maximum
 
-print(maximums)
-print(maksy)
-print(x)
-print(y)
-
 #######################################################################################################################
 
 # wysoka saturacja 150 - 255, szkieletyzacja
@@ -63,18 +59,51 @@ for maks in maksy:
     rho = 1  # Distance resolution of the accumulator in pixels.
     theta = np.pi / 180  # Angle resolution of the accumulator in radians.
     threshold = 15  # Accumulator threshold parameter. Only those lines are returned that get enough votes ( >threshold ).
-    minLineLength = 90  # od wielkosci zdjecia
-    maxLineGap = 90  # Maximum allowed gap between points on the same line to link them.
+    minLineLength = 150  # od wielkosci zdjecia
+    maxLineGap = 30  # Maximum allowed gap between points on the same line to link them.
     imgLines = np.copy(imgHSV) * 0
     lines = cv2.HoughLinesP(img2, rho, theta, threshold, np.array([]), minLineLength, maxLineGap)
-    for line in lines:
-        for x1, y1, x2, y2 in line:
-            cv2.line(imgLines, (x1, y1), (x2, y2), (255, 0, 0), 4)
-    imgFinal = cv2.addWeighted(img, 0.8, imgLines, 1, 0)
+    print(lines)
+    np.sort(lines, 2)
+    print("\n Posortwane:  \n")
+    print(lines)
+    print('\n')
 
-    cv2.imshow('imgFinal ', imgFinal)
+    if lines is not None:
+        # print(lines)
+        print(len(lines))
+        doUsuniecia = []  # indeksy które trzeba usunac z lines
+        for it in range(len(lines) - 1):
+            limit = 350
+            if abs(lines[it + 1][0][0] - lines[it][0][0]) < limit and abs(
+                    lines[it + 1][0][1] - lines[it][0][1]) < limit and abs(
+                    lines[it + 1][0][2] - lines[it][0][2]) < limit and abs(
+                    lines[it + 1][0][3] - lines[it][0][3]) < limit:
+                doUsuniecia.append(it)
+                for o in range(4):
+                    lines[it][0][o] = 0
 
-    cv2.waitKey(0)
+        # bylo = False
+        # for w in doUsuniecia:
+        #     # usuwanie od tyłu
+        #     print(lines[w])
+        #
+        #     print(lines[w])
+        #     bylo = True
+        # print(lines)
+
+        for line in lines:
+            for x1, y1, x2, y2 in line:
+                cv2.line(imgLines, (x1, y1), (x2, y2), (255, 0, 0), 4)
+        imgFinal = cv2.addWeighted(img, 0.8, imgLines, 1, 0)
+
+        cv2.imshow('imgFinal ', imgCanny)
+        cv2.imshow('imgFinal ', imgLines)
+
+        cv2.waitKey(0)
+    else:
+        print("No lines detected")
     index += 1
+
 
 # cv2.imshow('line_image', imgHSV[:,:,2])
