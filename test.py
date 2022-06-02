@@ -2,76 +2,72 @@ import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.signal import argrelextrema
+import math
 
-# path = r'C:\Users\grzeg\Documents\Studia\Semestr 6\Widzenie Maszynowe\Projekt\BikeMeasure\data\1.jpg'
-# path = r'C:\Users\grzeg\Documents\Studia\Semestr 6\Widzenie Maszynowe\Projekt\BikeMeasure\data\2.png'
-# path = r'C:\Users\grzeg\Documents\Studia\Semestr 6\Widzenie Maszynowe\Projekt\BikeMeasure\data\olx1.png'
-path = r'C:\Users\grzeg\Documents\Studia\Semestr 6\Widzenie Maszynowe\Projekt\BikeMeasure\data\olx2.png'
+# path = r'C:\Users\grzeg\Documents\Studia\Semestr 6\Widzenie Maszynowe\Projekt\BikeMeasure\data\4.jpg'
+# path = r'C:\Users\grzeg\Documents\Studia\Semestr 6\Widzenie Maszynowe\Projekt\BikeMeasure\data\olx2.png'
+path = r'C:\Users\grzeg\Documents\Studia\Semestr 6\Widzenie Maszynowe\Projekt\BikeMeasure\data\olx3.jpg'
+# path = r'C:\Users\grzeg\Documents\Studia\Semestr 6\Widzenie Maszynowe\Projekt\BikeMeasure\data\olx4.jpg'
+# path = r'C:\Users\grzeg\Documents\Studia\Semestr 6\Widzenie Maszynowe\Projekt\BikeMeasure\data\olx5.jpg'
+# path = r'C:\Users\grzeg\Documents\Studia\Semestr 6\Widzenie Maszynowe\Projekt\BikeMeasure\data\olx6.jpg'
 
 img = cv2.imread(path)
-img = cv2.resize(img, (1000, 700))
-
+wymiarX = 1000
+wymiarY = 700
+img = cv2.resize(img, (wymiarX, wymiarY))
 imgHSV = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
-img2 = np.copy(imgHSV) * 0
 
-# plt.hist(imgHSV[:, :, 0].flatten(), 50)
+#######################################################################################################################
+
 y, x, _ = plt.hist(imgHSV[:, :, 0].flatten(), 50)
 
+maxy = np.max(y)
+
 it = 0
-for piece in y:
-    if y[it] < 2500:
+for piece in y:  # wyzerowanie wartości pomijalnych
+    if y[it] < 0.02 * maxy:  # ileś procent masymalnej wartości
         y[it] = 0
     it += 1
+it = 0
 
+maksy = []
 maximums = argrelextrema(y, np.greater)
 for maximum in maximums:
-    print(x[maximum])
-print(maximums)
-print(x)
-print(y)
+    maksy = maximum
 
-# plt.show()
-# for piece in range(len(maximums) / 2):
-#     print(piece)
-img2 = cv2.inRange(imgHSV, (0, 0, 0), (10, 255, 255))
+index = 0
+for maks in maksy:
+    imgRange = cv2.inRange(imgHSV, ((x[maksy[index]] - (0.4 * x[maksy[index]])), 50, 0),  # maska z przedziałem od
+                           ((x[maksy[index]] + (0.4 * x[maksy[index]])), 255, 255))
+    imgCanny = cv2.Canny(imgRange, 50, 250)
+    cv2.imshow("Canny", imgCanny)
 
-# imgDilate = cv2.dilate(img2, np.ones((3, 3), np.uint8), iterations=1)
-imgErode = cv2.erode(img2, np.ones((3, 3), np.uint8), iterations=2)
-# imgDilate = cv2.dilate(imgErode, np.ones((3, 3), np.uint8), iterations=3)
+    iloscBieli = np.sum(imgRange == 255)
+    stosunek = int((iloscBieli / (wymiarX * wymiarY)) * 100)
+    print(stosunek)
+    if stosunek > 6 or stosunek < 2:
+        index += 1
+        continue
+    cv2.imshow('Range', imgRange)
 
-# cv2.imshow('line_image', imgHSV[:,:,2])
+    imgLines = np.copy(imgHSV) * 0
+    lines = cv2.HoughLines(imgRange, 1, np.pi / 180, 210, None, 0, 0)  # 100 było 210
+    if lines is not None:
+        for i in range(0, len(lines)):
+            rho = lines[i][0][0]
+            theta = lines[i][0][1]
+            a = math.cos(theta)
+            b = math.sin(theta)
+            x0 = a * rho
+            y0 = b * rho
+            pt1 = (int(x0 + 1000 * (-b)), int(y0 + 1000 * (a)))
+            pt2 = (int(x0 - 1000 * (-b)), int(y0 - 1000 * (a)))
+            cv2.line(imgLines, pt1, pt2, (255, 0, 0), 3, cv2.LINE_AA)
 
-# cv2.imshow('2', img2)
-# cv2.imshow('img', imgErode)
+        imgFinal = cv2.addWeighted(img, 0.8, imgLines, 1, 0)
 
-
-##########################################################################################
-kernel = 11
-
-imgGauss = cv2.GaussianBlur(imgErode, (kernel, kernel), 0)
-
-imgCanny = cv2.Canny(imgGauss, 50, 150)
-
-imgDilate = cv2.dilate(imgCanny, np.ones((3, 3), np.uint8), iterations=1)
-
-rho = 1  # Distance resolution of the accumulator in pixels.
-theta = np.pi / 180  # Angle resolution of the accumulator in radians.
-threshold = 15  # Accumulator threshold parameter. Only those lines are returned that get enough votes ( >threshold ).
-minLineLength = 90  # od wielkosci zdjecia
-maxLineGap = 90  # Maximum allowed gap between points on the same line to link them.
-
-imgLines = np.copy(imgHSV) * 0
-
-lines = cv2.HoughLinesP(imgErode, rho, theta, threshold, np.array([]), minLineLength, maxLineGap)
-
-# cv2.imshow('imgDilate', imgDilate)
-# cv2.imshow('imgCanny ', imgCanny)
-
-for line in lines:
-    for x1, y1, x2, y2 in line:
-        cv2.line(imgLines, (x1, y1), (x2, y2), (255, 0, 0), 4)
-
-imgFinal = cv2.addWeighted(img, 0.8, imgLines, 1, 0)
-# cv2.imshow('imgFinal ', imgFinal)
-
-cv2.waitKey(0)
+        cv2.imshow('imgFinal ', imgFinal)
+    else:
+        print("No lines detected")
+    index += 1
+    cv2.waitKey(0)
