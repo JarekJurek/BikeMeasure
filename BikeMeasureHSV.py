@@ -53,7 +53,7 @@ for maks in maksy:
         lines2 = [[0] * 2] * len(lines)
         for line in lines:
             for i in range(len(lines)):
-                lines2[i] = [lines[i][0][0], lines[i][0][1]]
+                lines2[i] = [lines[i][0][0], lines[i][0][1]]  # nowa zwykła lista dla prostrzego działania
         lines2.sort()
 
         for it in range(len(lines2) - 1):
@@ -65,10 +65,9 @@ for maks in maksy:
 
         while True:
             try:
-                lines2.remove([0, 0])
+                lines2.remove([0, 0])  # usuwanie oflagowanch (wyzerowanych) pól
             except ValueError:
                 break
-        print(lines2)
 
         for i in range(len(lines2)):
             rho = lines2[i][0]
@@ -81,7 +80,7 @@ for maks in maksy:
             pt2 = (int(x0 - 1000 * (-b)), int(y0 - 1000 * (a)))
             cv2.line(imgLines, pt1, pt2, (255, 0, 0), 3, cv2.LINE_AA)
 
-        imgFinal = cv2.addWeighted(img, 0.8, imgLines, 1, 0)
+        imgFinal = cv2.addWeighted(img, 0.4, imgLines, 1, 0)
 
         cv2.imshow('imgFinal ', imgFinal)
     else:
