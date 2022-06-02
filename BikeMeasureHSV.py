@@ -5,8 +5,8 @@ from scipy.signal import argrelextrema
 import math
 
 # path = r'C:\Users\grzeg\Documents\Studia\Semestr 6\Widzenie Maszynowe\Projekt\BikeMeasure\data\4.jpg'
-# path = r'C:\Users\grzeg\Documents\Studia\Semestr 6\Widzenie Maszynowe\Projekt\BikeMeasure\data\olx2.png'
-path = r'C:\Users\grzeg\Documents\Studia\Semestr 6\Widzenie Maszynowe\Projekt\BikeMeasure\data\olx3.jpg'
+path = r'C:\Users\grzeg\Documents\Studia\Semestr 6\Widzenie Maszynowe\Projekt\BikeMeasure\data\olx2.png'
+# path = r'C:\Users\grzeg\Documents\Studia\Semestr 6\Widzenie Maszynowe\Projekt\BikeMeasure\data\olx3.jpg'
 # path = r'C:\Users\grzeg\Documents\Studia\Semestr 6\Widzenie Maszynowe\Projekt\BikeMeasure\data\olx4.jpg'
 # path = r'C:\Users\grzeg\Documents\Studia\Semestr 6\Widzenie Maszynowe\Projekt\BikeMeasure\data\olx5.jpg'
 # path = r'C:\Users\grzeg\Documents\Studia\Semestr 6\Widzenie Maszynowe\Projekt\BikeMeasure\data\olx6.jpg'
@@ -21,25 +21,24 @@ y, x, _ = plt.hist(imgHSV[:, :, 0].flatten(), 50)
 
 it = 0
 for piece in y:  # wyzerowanie wartości pomijalnych
-    if y[it] < 0.02 * np.max(y):  # ileś procent masymalnej wartości
+    if y[it] < 0.02 * np.max(y):  # jeżeli ileś procent masymalnej wartości
         y[it] = 0
     it += 1
 
 maksy = []
-maximums = argrelextrema(y, np.greater)
+maximums = argrelextrema(y, np.greater)  # szukanie maksimów lokalnych spośród tego co zostało
 for maximum in maximums:
     maksy = maximum
 
 index = 0
 for maks in maksy:
-    imgRange = cv2.inRange(imgHSV, ((x[maksy[index]] - (0.4 * x[maksy[index]])), 50, 0),  # maska z przedziałem od
+    imgRange = cv2.inRange(imgHSV, ((x[maksy[index]] - (0.4 * x[maksy[index]])), 50, 0),  # maska z przedziałem
                            ((x[maksy[index]] + (0.4 * x[maksy[index]])), 255, 255))
     imgCanny = cv2.Canny(imgRange, 50, 250)  # na razie nie używany
     cv2.imshow("Canny", imgCanny)
 
     iloscBieli = np.sum(imgRange == 255)
     stosunek = int((iloscBieli / (wymiarX * wymiarY)) * 100)
-    print(stosunek)
     if stosunek > 6 or stosunek < 2:
         index += 1
         continue
@@ -47,10 +46,33 @@ for maks in maksy:
 
     imgLines = np.copy(imgHSV) * 0
     lines = cv2.HoughLines(imgRange, 1, np.pi / 180, 210, None, 0, 0)  # 100 było 210
+
     if lines is not None:
-        for i in range(0, len(lines)):
-            rho = lines[i][0][0]
-            theta = lines[i][0][1]
+
+        # averaging lines
+        lines2 = [[0] * 2] * len(lines)
+        for line in lines:
+            for i in range(len(lines)):
+                lines2[i] = [lines[i][0][0], lines[i][0][1]]
+        lines2.sort()
+
+        for it in range(len(lines2) - 1):
+            limitRho = 40
+            limitTheta = 3
+            if abs(lines2[it + 1][0] - lines2[it][0]) < limitRho and abs(
+                    lines2[it + 1][1] - lines2[it][1]) < limitTheta:
+                lines2[it] = [0, 0]
+
+        while True:
+            try:
+                lines2.remove([0, 0])
+            except ValueError:
+                break
+        print(lines2)
+
+        for i in range(len(lines2)):
+            rho = lines2[i][0]
+            theta = lines2[i][1]
             a = math.cos(theta)
             b = math.sin(theta)
             x0 = a * rho
