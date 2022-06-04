@@ -34,6 +34,10 @@ index = 0
 for maks in maksy:
     imgRange = cv2.inRange(imgHSV, ((x[maksy[index]] - (0.4 * x[maksy[index]])), 50, 0),  # maska z przedziałem
                            ((x[maksy[index]] + (0.4 * x[maksy[index]])), 255, 255))
+    maska = np.ones((3, 3), np.uint8)
+
+    # imgRange = cv2.erode(imgRange, maska, iterations=1)
+    imgRange = cv2.dilate(imgRange, maska, iterations=3)
     imgCanny = cv2.Canny(imgRange, 50, 250)  # na razie nie używany
     cv2.imshow("Canny", imgCanny)
 
@@ -45,7 +49,7 @@ for maks in maksy:
     cv2.imshow('Range', imgRange)
 
     imgLines = np.copy(imgHSV) * 0
-    lines = cv2.HoughLines(imgRange, 1, np.pi / 180, 210, None, 0, 0)  # 100 było 210
+    lines = cv2.HoughLines(imgCanny, 1, np.pi / 180, 100)  # 100 było 210
 
     if lines is not None:
 
@@ -55,14 +59,12 @@ for maks in maksy:
             for i in range(len(lines)):
                 lines2[i] = [lines[i][0][0], lines[i][0][1]]  # nowa zwykła lista dla prostrzego działania
         lines2.sort()
-
         for it in range(len(lines2) - 1):
             limitRho = 40
             limitTheta = 3
             if abs(lines2[it + 1][0] - lines2[it][0]) < limitRho and abs(
                     lines2[it + 1][1] - lines2[it][1]) < limitTheta:
                 lines2[it] = [0, 0]
-
         while True:
             try:
                 lines2.remove([0, 0])  # usuwanie oflagowanch (wyzerowanych) pól
