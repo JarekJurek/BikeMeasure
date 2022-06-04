@@ -54,7 +54,7 @@ for maks in maksy:
     cv2.imshow('Range', imgRange)
 
     imgLines = np.copy(imgHSV) * 0
-    lines = cv2.HoughLines(imgRange, 1, np.pi / 180, 210, None, 0, 0)  # 100 było 210
+    lines = cv2.HoughLines(imgRange, 1, np.pi / 180, 210)  # 100 było 210
 
     if lines is not None:
 
@@ -78,6 +78,7 @@ for maks in maksy:
             except ValueError:
                 break
 
+        # fiding intersections
         intersections = []
         for i in range(len(lines2) - 1):
             rho1 = lines2[i][0]
@@ -87,36 +88,34 @@ for maks in maksy:
                 theta2 = lines2[j][1]
                 intersections.append(intersection(rho1, theta1, rho2, theta2))
 
+        # averaging intersections
         intersections.sort()
         for it in range(len(intersections) - 1):
-            limit = 100
+            limit = 40
             if abs(intersections[it + 1][0][0] - intersections[it][0][0]) < limit and abs(
                     intersections[it + 1][0][1] - intersections[it][0][1]) < limit:
                 intersections[it] = [0, 0]
-
         while True:
             try:
                 intersections.remove([0, 0])  # usuwanie oflagowanch (wyzerowanych) pól
             except ValueError:
                 break
 
-    for i in range(len(lines2)):
-        rho = lines2[i][0]
-        theta = lines2[i][1]
-        a = math.cos(theta)
-        b = math.sin(theta)
-        x0 = a * rho
-        y0 = b * rho
-        pt1 = [int(x0 + 1000 * (-b)), int(y0 + 1000 * a)]
-        pt2 = [int(x0 - 1000 * (-b)), int(y0 - 1000 * a)]
-        cv2.line(imgLines, pt1, pt2, (255, 0, 0), 3, cv2.LINE_AA)
-    print(intersections)
-    imgFinal = cv2.addWeighted(img, 0.4, imgLines, 1, 0)
-    for inter in intersections:
-        imgFinal = cv2.circle(imgFinal, (inter[0][0], inter[0][1]), radius=10, color=(0, 0, 255), thickness=-1)
-    cv2.imshow('imgFinal ', imgFinal)
-
-else:
+        for i in range(len(lines2)):
+            rho = lines2[i][0]
+            theta = lines2[i][1]
+            a = math.cos(theta)
+            b = math.sin(theta)
+            x0 = a * rho
+            y0 = b * rho
+            pt1 = [int(x0 + 1000 * (-b)), int(y0 + 1000 * a)]
+            pt2 = [int(x0 - 1000 * (-b)), int(y0 - 1000 * a)]
+            cv2.line(imgLines, pt1, pt2, (255, 0, 0), 3, cv2.LINE_AA)
+        print(intersections)
+        imgFinal = cv2.addWeighted(img, 0.4, imgLines, 1, 0)
+        for inter in intersections:
+            imgFinal = cv2.circle(imgFinal, (inter[0][0], inter[0][1]), radius=10, color=(0, 0, 255), thickness=-1)
+        cv2.imshow('imgFinal ', imgFinal)
     else:
         print("No lines detected")
     index += 1
