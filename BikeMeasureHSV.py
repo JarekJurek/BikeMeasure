@@ -43,10 +43,11 @@ print(maksy)
 for maks in maksy:
     imgRange = cv2.inRange(imgHSV, ((x[maksy[index]] - (0.4 * x[maksy[index]])), 50, 0),  # maska z przedziałem
                            ((x[maksy[index]] + (0.4 * x[maksy[index]])), 255, 255))
-    maska = np.ones((3, 3), np.uint8)
 
+    # maska = np.ones((3, 3), np.uint8)
     # imgRange = cv2.erode(imgRange, maska, iterations=1)
-    imgRange = cv2.dilate(imgRange, maska, iterations=3)
+    # imgRange = cv2.dilate(imgRange, maska, iterations=3)
+
     imgCanny = cv2.Canny(imgRange, 50, 250)  # na razie nie używany
     cv2.imshow("Canny", imgCanny)
 
@@ -58,7 +59,7 @@ for maks in maksy:
     cv2.imshow('Range', imgRange)
 
     imgLines = np.copy(imgHSV) * 0
-    
+
     lines = cv2.HoughLines(imgRange, 1, np.pi / 180, 210)  # 100 było 210
 
     if lines is not None:
@@ -118,7 +119,7 @@ for maks in maksy:
         imgFinal = cv2.addWeighted(img, 0.4, imgLines, 1, 0)
         for inter in intersections:
             imgFinal = cv2.circle(imgFinal, (inter[0][0], inter[0][1]), radius=10, color=(0, 0, 255), thickness=-1)
-        cv2.imshow('imgFinal ', imgFinal)
+        cv2.imshow('imgFinal', imgFinal)
     else:
         print("No lines detected")
     index += 1
