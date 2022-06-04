@@ -5,11 +5,19 @@ from scipy.signal import argrelextrema
 import math
 
 # path = r'C:\Users\grzeg\Documents\Studia\Semestr 6\Widzenie Maszynowe\Projekt\BikeMeasure\data\4.jpg'
-path = r'C:\Users\grzeg\Documents\Studia\Semestr 6\Widzenie Maszynowe\Projekt\BikeMeasure\data\olx2.png'
-# path = r'C:\Users\grzeg\Documents\Studia\Semestr 6\Widzenie Maszynowe\Projekt\BikeMeasure\data\olx3.jpg'
+# path = r'C:\Users\grzeg\Documents\Studia\Semestr 6\Widzenie Maszynowe\Projekt\BikeMeasure\data\olx2.png'
+path = r'C:\Users\grzeg\Documents\Studia\Semestr 6\Widzenie Maszynowe\Projekt\BikeMeasure\data\olx3.jpg'
 # path = r'C:\Users\grzeg\Documents\Studia\Semestr 6\Widzenie Maszynowe\Projekt\BikeMeasure\data\olx4.jpg'
 # path = r'C:\Users\grzeg\Documents\Studia\Semestr 6\Widzenie Maszynowe\Projekt\BikeMeasure\data\olx5.jpg'
 # path = r'C:\Users\grzeg\Documents\Studia\Semestr 6\Widzenie Maszynowe\Projekt\BikeMeasure\data\olx6.jpg'
+
+def intersection(rho1, theta1, rho2, theta2):
+    A = np.array([[np.cos(theta1), np.sin(theta1)], [np.cos(theta2), np.sin(theta2)]])
+    be = np.array([[rho1], [rho2]])
+    iks, ygrek = np.linalg.solve(A, be)
+    iks, ygrek = int(np.round(iks)), int(np.round(ygrek))
+    return [[iks, ygrek]]
+
 
 img = cv2.imread(path)
 wymiarX = 1000
@@ -31,6 +39,7 @@ for maximum in maximums:
     maksy = maximum
 
 index = 0
+print(maksy)
 for maks in maksy:
     imgRange = cv2.inRange(imgHSV, ((x[maksy[index]] - (0.4 * x[maksy[index]])), 50, 0),  # maska z przedziałem
                            ((x[maksy[index]] + (0.4 * x[maksy[index]])), 255, 255))
@@ -69,21 +78,48 @@ for maks in maksy:
             except ValueError:
                 break
 
-        for i in range(len(lines2)):
-            rho = lines2[i][0]
-            theta = lines2[i][1]
-            a = math.cos(theta)
-            b = math.sin(theta)
-            x0 = a * rho
-            y0 = b * rho
-            pt1 = (int(x0 + 1000 * (-b)), int(y0 + 1000 * (a)))
-            pt2 = (int(x0 - 1000 * (-b)), int(y0 - 1000 * (a)))
-            cv2.line(imgLines, pt1, pt2, (255, 0, 0), 3, cv2.LINE_AA)
+        intersections = []
+        for i in range(len(lines2) - 1):
+            rho1 = lines2[i][0]
+            theta1 = lines2[i][1]
+            for j in range(i + 1, (len(lines2))):
+                rho2 = lines2[j][0]
+                theta2 = lines2[j][1]
+                intersections.append(intersection(rho1, theta1, rho2, theta2))
 
-        imgFinal = cv2.addWeighted(img, 0.4, imgLines, 1, 0)
+        intersections.sort()
+        for it in range(len(intersections) - 1):
+            limit = 100
+            if abs(intersections[it + 1][0][0] - intersections[it][0][0]) < limit and abs(
+                    intersections[it + 1][0][1] - intersections[it][0][1]) < limit:
+                intersections[it] = [0, 0]
 
-        cv2.imshow('imgFinal ', imgFinal)
+        while True:
+            try:
+                intersections.remove([0, 0])  # usuwanie oflagowanch (wyzerowanych) pól
+            except ValueError:
+                break
+
+    for i in range(len(lines2)):
+        rho = lines2[i][0]
+        theta = lines2[i][1]
+        a = math.cos(theta)
+        b = math.sin(theta)
+        x0 = a * rho
+        y0 = b * rho
+        pt1 = [int(x0 + 1000 * (-b)), int(y0 + 1000 * a)]
+        pt2 = [int(x0 - 1000 * (-b)), int(y0 - 1000 * a)]
+        cv2.line(imgLines, pt1, pt2, (255, 0, 0), 3, cv2.LINE_AA)
+    print(intersections)
+    imgFinal = cv2.addWeighted(img, 0.4, imgLines, 1, 0)
+    for inter in intersections:
+        imgFinal = cv2.circle(imgFinal, (inter[0][0], inter[0][1]), radius=10, color=(0, 0, 255), thickness=-1)
+    cv2.imshow('imgFinal ', imgFinal)
+
+else:
     else:
         print("No lines detected")
     index += 1
     cv2.waitKey(0)
+
+
