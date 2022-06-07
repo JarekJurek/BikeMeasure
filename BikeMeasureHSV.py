@@ -5,8 +5,8 @@ from scipy.signal import argrelextrema
 import math
 
 # path = r'C:\Users\grzeg\Documents\Studia\Semestr 6\Widzenie Maszynowe\Projekt\BikeMeasure\data\4.jpg'
-# path = r'C:\Users\grzeg\Documents\Studia\Semestr 6\Widzenie Maszynowe\Projekt\BikeMeasure\data\olx2.png'
-path = r'C:\Users\grzeg\Documents\Studia\Semestr 6\Widzenie Maszynowe\Projekt\BikeMeasure\data\olx3.jpg'
+path = r'C:\Users\grzeg\Documents\Studia\Semestr 6\Widzenie Maszynowe\Projekt\BikeMeasure\data\olx2.png'
+# path = r'C:\Users\grzeg\Documents\Studia\Semestr 6\Widzenie Maszynowe\Projekt\BikeMeasure\data\olx3.jpg'
 # path = r'C:\Users\grzeg\Documents\Studia\Semestr 6\Widzenie Maszynowe\Projekt\BikeMeasure\data\olx4.jpg'
 # path = r'C:\Users\grzeg\Documents\Studia\Semestr 6\Widzenie Maszynowe\Projekt\BikeMeasure\data\olx5.jpg'
 # path = r'C:\Users\grzeg\Documents\Studia\Semestr 6\Widzenie Maszynowe\Projekt\BikeMeasure\data\olx6.jpg'
@@ -19,9 +19,16 @@ def intersection(rho1, theta1, rho2, theta2):
     return [[iks, ygrek]]
 
 
-img = cv2.imread(path)
+def fillPipeLength(x1, y1, x2, y2):
+    length = int(np.sqrt(pow(x2 - x1, 2) + pow(y2 - y1, 2)))
+    x = int((x1 + x2)/2)
+    y = int((y1 + y2)/2)
+    print("[[", x1, y1, "]], [[", x2, y2, "]]", " i tyle")
+    return [length, x, y]
+
 wymiarX = 1000
 wymiarY = 700
+img = cv2.imread(path)
 img = cv2.resize(img, (wymiarX, wymiarY))
 imgHSV = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
 
@@ -39,7 +46,7 @@ for maximum in maximums:
     maksy = maximum
 
 index = 0
-print(maksy)
+
 for maks in maksy:
     imgRange = cv2.inRange(imgHSV, ((x[maksy[index]] - (0.4 * x[maksy[index]])), 50, 0),  # maska z przedziałem
                            ((x[maksy[index]] + (0.4 * x[maksy[index]])), 255, 255))
@@ -47,9 +54,8 @@ for maks in maksy:
     # maska = np.ones((3, 3), np.uint8)
     # imgRange = cv2.erode(imgRange, maska, iterations=1)
     # imgRange = cv2.dilate(imgRange, maska, iterations=3)
-
-    imgCanny = cv2.Canny(imgRange, 50, 250)  # na razie nie używany
-    cv2.imshow("Canny", imgCanny)
+    # imgCanny = cv2.Canny(imgRange, 50, 250)  # na razie nie używany
+    # cv2.imshow("Canny", imgCanny)
 
     iloscBieli = np.sum(imgRange == 255)
     stosunek = int((iloscBieli / (wymiarX * wymiarY)) * 100)
@@ -98,10 +104,16 @@ for maks in maksy:
             limit = 40
             if abs(intersections[it + 1][0][0] - intersections[it][0][0]) < limit and abs(
                     intersections[it + 1][0][1] - intersections[it][0][1]) < limit:
-                intersections[it] = [0, 0]
+                intersections[it] = [[0, 0]]
+
+            if intersections[it][0][0] > wymiarX or intersections[it][0][1] > wymiarY:
+                intersections[it] = [[0, 0]]
+            if intersections[it + 1][0][0] > wymiarX or intersections[it + 1][0][1] > wymiarY:
+                intersections[it + 1] = [[0, 0]]
+
         while True:
             try:
-                intersections.remove([0, 0])  # usuwanie oflagowanch (wyzerowanych) pól
+                intersections.remove([[0, 0]])  # usuwanie oflagowanch (wyzerowanych) pól
             except ValueError:
                 break
 
@@ -115,14 +127,35 @@ for maks in maksy:
             pt1 = [int(x0 + 1000 * (-b)), int(y0 + 1000 * a)]
             pt2 = [int(x0 - 1000 * (-b)), int(y0 - 1000 * a)]
             cv2.line(imgLines, pt1, pt2, (255, 0, 0), 3, cv2.LINE_AA)
-        print(intersections)
+
         imgFinal = cv2.addWeighted(img, 0.4, imgLines, 1, 0)
         for inter in intersections:
             imgFinal = cv2.circle(imgFinal, (inter[0][0], inter[0][1]), radius=10, color=(0, 0, 255), thickness=-1)
+
+        pipeLength = []
+        global grzesX0, grzesY0, grzesXk, grzesYk
+        for it in range(len(intersections) - 1):
+            x1 = intersections[it][0][0]
+            y1 = intersections[it][0][1]
+            x2 = intersections[it + 1][0][0]
+            y2 = intersections[it + 1][0][1]
+            if it == 0:
+                grzesX0 = x1
+                grzesY0 = y1
+            if it == len(intersections) - 2:
+                grzesXk = x2
+                grzesYk = y2
+            pipeLength.append(fillPipeLength(x1, y1, x2, y2))
+        pipeLength.append(fillPipeLength(grzesX0, grzesY0, grzesXk, grzesYk))
+
+        font = cv2.FONT_HERSHEY_SIMPLEX
+        for tmp in range(0, len(pipeLength)):
+            cv2.putText(imgFinal, str(pipeLength[tmp][0]), (pipeLength[tmp][1], pipeLength[tmp][2]),
+                        font, 1, (0, 255, 0), 2, cv2.LINE_AA)
+        print("intersections", intersections)
+        print("length", pipeLength)
         cv2.imshow('imgFinal', imgFinal)
     else:
         print("No lines detected")
     index += 1
     cv2.waitKey(0)
-
-
