@@ -8,8 +8,11 @@ import math
 # path = r'C:\Users\grzeg\Documents\Studia\Semestr 6\Widzenie Maszynowe\Projekt\BikeMeasure\data\olx2.png'
 # path = r'C:\Users\grzeg\Documents\Studia\Semestr 6\Widzenie Maszynowe\Projekt\BikeMeasure\data\olx3.jpg'
 # path = r'C:\Users\grzeg\Documents\Studia\Semestr 6\Widzenie Maszynowe\Projekt\BikeMeasure\data\olx4.jpg'
+path = r'C:\Users\grzeg\Documents\Studia\Semestr 6\Widzenie Maszynowe\Projekt\BikeMeasure\data\Untitled4.png'
+
+# path = r'C:\Users\grzeg\Documents\Studia\Semestr 6\Widzenie Maszynowe\Projekt\BikeMeasure\data\olx6.jpg'
 # path = r'C:\Users\grzeg\Documents\Studia\Semestr 6\Widzenie Maszynowe\Projekt\BikeMeasure\data\olx5.jpg'
-path = r'C:\Users\grzeg\Documents\Studia\Semestr 6\Widzenie Maszynowe\Projekt\BikeMeasure\data\olx6.jpg'
+
 
 wymiarX = 1000
 wymiarY = 700
@@ -51,8 +54,7 @@ for maks in maksy:
             for i in range(len(lines)):
                 lines2[i] = [lines[i][0][0], lines[i][0][1]]  # nowa zwykła lista dla prostrzego działania
 
-        print(lines2)
-        limitRho = 400
+        limitRho = 380
         limitTheta = 0.5
         for i in range(len(lines2) - 1):
             for j in range(i + 1, (len(lines2))):
@@ -64,7 +66,6 @@ for maks in maksy:
                 lines2.remove([0, 0])  # usuwanie "oflagowanch" (wyzerowanych) pól
             except ValueError:
                 break
-        print(lines2)
 
         for i in range(len(lines2)):
             rho = lines2[i][0]
