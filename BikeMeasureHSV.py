@@ -4,12 +4,13 @@ import matplotlib.pyplot as plt
 from scipy.signal import argrelextrema
 import math
 
-
-path = r'C:\Users\grzeg\Documents\Studia\Semestr 6\Widzenie Maszynowe\Projekt\BikeMeasure\data\olx2.png'
-# path = r'C:\Users\grzeg\Documents\Studia\Semestr 6\Widzenie Maszynowe\Projekt\BikeMeasure\data\olx3.jpg'
-# path = r'C:\Users\grzeg\Documents\Studia\Semestr 6\Widzenie Maszynowe\Projekt\BikeMeasure\data\olx4.jpg'
-# path = r'C:\Users\grzeg\Documents\Studia\Semestr 6\Widzenie Maszynowe\Projekt\BikeMeasure\data\olx5.jpg'
+# path = r'C:\Users\grzeg\Documents\Studia\Semestr 6\Widzenie Maszynowe\Projekt\BikeMeasure\data\olx2.png'
 # path = r'C:\Users\grzeg\Documents\Studia\Semestr 6\Widzenie Maszynowe\Projekt\BikeMeasure\data\olx6.jpg'
+# path = r'C:\Users\grzeg\Documents\Studia\Semestr 6\Widzenie Maszynowe\Projekt\BikeMeasure\data\olx4.jpg'
+# path = r'C:\Users\grzeg\Documents\Studia\Semestr 6\Widzenie Maszynowe\Projekt\BikeMeasure\data\Untitled2.png'
+# path = r'C:\Users\grzeg\Documents\Studia\Semestr 6\Widzenie Maszynowe\Projekt\BikeMeasure\data\Untitled3.png'
+path = r'C:\Users\grzeg\Documents\Studia\Semestr 6\Widzenie Maszynowe\Projekt\BikeMeasure\data\Untitled4.png'
+
 
 def intersection(rho1, theta1, rho2, theta2):
     A = np.array([[np.cos(theta1), np.sin(theta1)], [np.cos(theta2), np.sin(theta2)]])
@@ -53,26 +54,27 @@ for maks in maksy:
                            ((x[maksy[index]] + (0.4 * x[maksy[index]])), 255, 255))
     iloscBieli = np.sum(imgRange == 255)
     stosunek = int((iloscBieli / (wymiarX * wymiarY)) * 100)
-    if stosunek > 6 or stosunek < 2:
+    if stosunek > 6 or stosunek < 2:  # odrzucanie peaku histogramu ze względu na ilości danego koloru
         index += 1
         continue
 
     imgLines = np.copy(imgHSV) * 0
-    lines = cv2.HoughLines(imgRange, 1, np.pi / 180, 210)
-    if lines is not None:
+    lines = cv2.HoughLines(imgRange, 1, np.pi / 180, 210)  # krawędzie
 
+    if len(lines) > 1:
         # averaging lines
         lines2 = [[0] * 2] * len(lines)
         for line in lines:
             for i in range(len(lines)):
                 lines2[i] = [lines[i][0][0], lines[i][0][1]]  # nowa zwykła lista dla prostrzego działania
-        lines2.sort()
-        for it in range(len(lines2) - 1):
-            limitRho = 40
-            limitTheta = 3  # 3 a tam np.pi/12.0001
-            if abs(lines2[it + 1][0] - lines2[it][0]) < limitRho and abs(
-                    lines2[it + 1][1] - lines2[it][1]) < limitTheta:
-                lines2[it] = [0, 0]
+
+        limitRho = 380
+        limitTheta = 0.5
+        for i in range(len(lines2) - 1):
+            for j in range(i + 1, (len(lines2))):
+                if abs(lines2[i][1] - lines2[j][1]) < limitTheta and abs(
+                        lines2[i][0] - lines2[j][0]) < limitRho:
+                    lines2[j] = [0, 0]
         while True:
             try:
                 lines2.remove([0, 0])  # usuwanie "oflagowanch" (wyzerowanych) pól
@@ -81,7 +83,6 @@ for maks in maksy:
 
         # fiding intersections
         intersections = []
-        print(len(lines2))  # 3 a tam 10
         for i in range(len(lines2) - 1):
             rho1 = lines2[i][0]
             theta1 = lines2[i][1]
@@ -97,9 +98,9 @@ for maks in maksy:
             if abs(intersections[it + 1][0][0] - intersections[it][0][0]) < limit and abs(
                     intersections[it + 1][0][1] - intersections[it][0][1]) < limit:
                 intersections[it] = [[0, 0]]
-            if intersections[it][0][0] > 0.78 * wymiarX or intersections[it][0][1] > wymiarY:
+            if intersections[it][0][0] > 0.78 * wymiarX or intersections[it][0][1] > 0.7 * wymiarY:
                 intersections[it] = [[0, 0]]
-            if intersections[it + 1][0][0] > 0.78 * wymiarX or intersections[it + 1][0][1] > wymiarY:
+            if intersections[it + 1][0][0] > 0.78 * wymiarX or intersections[it + 1][0][1] > 0.7 * wymiarY:
                 intersections[it + 1] = [[0, 0]]
             if intersections[it][0][0] < 0.1 * wymiarX or intersections[it][0][1] < 0.1 * wymiarY:
                 intersections[it] = [[0, 0]]
@@ -129,27 +130,24 @@ for maks in maksy:
 
         pipeLength = []
         global grzesX0, grzesY0, grzesXk, grzesYk
-        if len(intersections) <= 1:
-            print("zbyt mało punktów")
-        else:
-            for it in range(len(intersections) - 1):
-                x1 = intersections[it][0][0]
-                y1 = intersections[it][0][1]
-                x2 = intersections[it + 1][0][0]
-                y2 = intersections[it + 1][0][1]
-                if it == 0:
-                    grzesX0 = x1
-                    grzesY0 = y1
-                if it == len(intersections) - 2:
-                    grzesXk = x2
-                    grzesYk = y2
-                pipeLength.append(fillPipeLength(x1, y1, x2, y2))
-            pipeLength.append(fillPipeLength(grzesX0, grzesY0, grzesXk, grzesYk))
+        for it in range(len(intersections) - 1):
+            x1 = intersections[it][0][0]
+            y1 = intersections[it][0][1]
+            x2 = intersections[it + 1][0][0]
+            y2 = intersections[it + 1][0][1]
+            if it == 0:
+                grzesX0 = x1
+                grzesY0 = y1
+            if it == len(intersections) - 2:
+                grzesXk = x2
+                grzesYk = y2
+            pipeLength.append(fillPipeLength(x1, y1, x2, y2))
+        pipeLength.append(fillPipeLength(grzesX0, grzesY0, grzesXk, grzesYk))
 
         font = cv2.FONT_HERSHEY_SIMPLEX
         for tmp in range(0, len(pipeLength)):
-            cv2.putText(imgFinal, (str(pipeLength[tmp][0]) + "cm"), (pipeLength[tmp][1], pipeLength[tmp][2]),
-                        font, 1, (0, 255, 0), 2, cv2.LINE_AA)
+            cv2.putText(imgFinal, (str(pipeLength[tmp][0]) + "cm"), (pipeLength[tmp][1], pipeLength[tmp][2]), font, 1,
+                        (0, 255, 0), 2, cv2.LINE_AA)
         cv2.imshow('imgFinal', imgFinal)
     else:
         print("No lines detected")
