@@ -8,14 +8,14 @@ import math
 # path = r'C:\Users\grzeg\Documents\Studia\Semestr 6\Widzenie Maszynowe\Projekt\BikeMeasure\data\olx6.jpg'
 # path = r'C:\Users\grzeg\Documents\Studia\Semestr 6\Widzenie Maszynowe\Projekt\BikeMeasure\data\olx4.jpg'
 # path = r'C:\Users\grzeg\Documents\Studia\Semestr 6\Widzenie Maszynowe\Projekt\BikeMeasure\data\Untitled2.png'
-# path = r'C:\Users\grzeg\Documents\Studia\Semestr 6\Widzenie Maszynowe\Projekt\BikeMeasure\data\Untitled3.png'
-path = r'C:\Users\grzeg\Documents\Studia\Semestr 6\Widzenie Maszynowe\Projekt\BikeMeasure\data\Untitled4.png'
+path = r'C:\Users\grzeg\Documents\Studia\Semestr 6\Widzenie Maszynowe\Projekt\BikeMeasure\data\Untitled3.png'
+# path = r'C:\Users\grzeg\Documents\Studia\Semestr 6\Widzenie Maszynowe\Projekt\BikeMeasure\data\Untitled4.png'
 
 
 def intersection(rho1, theta1, rho2, theta2):
     A = np.array([[np.cos(theta1), np.sin(theta1)], [np.cos(theta2), np.sin(theta2)]])
     be = np.array([[rho1], [rho2]])
-    iks, ygrek = np.linalg.solve(A, be)
+    iks, ygrek = np.linalg.solve(A, be)  # rozwiązanie równania macieżowego liniowego (linear matrix equation)
     iks, ygrek = int(np.round(iks)), int(np.round(ygrek))
     return [[iks, ygrek]]
 
@@ -35,7 +35,7 @@ imgOG = cv2.imread(path)
 img = cv2.resize(imgOG, (wymiarX, wymiarY))
 imgHSV = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
 
-y, x, _ = plt.hist(imgHSV[:, :, 0].flatten(), 50)
+y, x, _ = plt.hist(imgHSV[:, :, 0].flatten(), 50)  # jakie zakresy x i y i która warstwa - tutaj H; flatten lista list
 
 it = 0
 for piece in y:  # wyzerowanie wartości pomijalnych
@@ -43,14 +43,14 @@ for piece in y:  # wyzerowanie wartości pomijalnych
         y[it] = 0
     it += 1
 
-maksy = []
-maximums = argrelextrema(y, np.greater)  # szukanie maksimów lokalnych spośród tego co zostało
+maksy = [] # szukanie maksimów lokalnych spośród tego co zostało
+maximums = argrelextrema(y, np.greater)  # np.greater to porównanie dwóch sąsiednich wartości
 for maximum in maximums:
     maksy = maximum
 
 index = 0
 for maks in maksy:
-    imgRange = cv2.inRange(imgHSV, ((x[maksy[index]] - (0.4 * x[maksy[index]])), 50, 0),  # maska z przedziałem
+    imgRange = cv2.inRange(imgHSV, ((x[maksy[index]] - (0.4 * x[maksy[index]])), 50, 0),  # maska z przedziałami H,S,V
                            ((x[maksy[index]] + (0.4 * x[maksy[index]])), 255, 255))
     iloscBieli = np.sum(imgRange == 255)
     stosunek = int((iloscBieli / (wymiarX * wymiarY)) * 100)
@@ -59,7 +59,7 @@ for maks in maksy:
         continue
 
     imgLines = np.copy(imgHSV) * 0
-    lines = cv2.HoughLines(imgRange, 1, np.pi / 180, 210)  # krawędzie
+    lines = cv2.HoughLines(imgRange, 1, np.pi / 180, 210)  # krawędzie, rho, theta threshold
 
     if len(lines) > 1:
         # averaging lines
@@ -122,7 +122,7 @@ for maks in maksy:
             y0 = b * rho
             pt1 = [int(x0 + 1000 * (-b)), int(y0 + 1000 * a)]
             pt2 = [int(x0 - 1000 * (-b)), int(y0 - 1000 * a)]
-            cv2.line(imgLines, pt1, pt2, (255, 0, 0), 3, cv2.LINE_AA)
+            cv2.line(imgLines, pt1, pt2, (255, 0, 0), 3, cv2.LINE_AA)  # color, thickness style
 
         imgFinal = cv2.addWeighted(img, 0.4, imgLines, 1, 0)
         for inter in intersections:
